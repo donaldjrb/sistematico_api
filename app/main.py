@@ -5,8 +5,9 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from app.core.config import get_settings
 from app.api.v1.api import api_router
+from app.core.config import get_settings
+
 
 # ────────────────────────────────────────────────────────────
 settings = get_settings()
