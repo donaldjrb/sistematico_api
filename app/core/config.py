@@ -36,6 +36,8 @@ class Settings(BaseSettings):
             f"@{self.db_host}:{self.db_port}/{self.db_name}"
         )
 
+    # ── Rate-limit ───────────────
+    requests_per_minute: int = 60
 
 @lru_cache
 def get_settings() -> Settings:
