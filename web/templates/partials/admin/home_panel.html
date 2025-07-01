@@ -1,0 +1,56 @@
+{#
+  Ruta: web/templates/partials/admin/home_panel.html
+#}
+<div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+  <div class="px-4 py-5 sm:p-6">
+    <div class="sm:flex sm:items-center sm:justify-between">
+      <div class="sm:flex-auto">
+        <div class="flex items-center">
+          {% if company.logo_url %}
+            <img class="h-12 w-12 rounded-full object-cover mr-4" src="{{ company.logo_url }}" alt="Company Logo">
+          {% endif %}
+          <div>
+            <h2 class="text-xl font-semibold leading-7 text-gray-900">{{ company.name }}</h2>
+            <p class="mt-1 text-sm leading-6 text-gray-600">Bienvenido al panel de administración.</p>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 sm:mt-0 sm:ml-4 sm:flex-none">
+        <button 
+          @click="isModalOpen = true"
+          hx-get="/admin/company/edit-form"
+          hx-target="#modal-content"
+          hx-swap="innerHTML"
+          type="button" 
+          class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+          Editar
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-6 border-t border-gray-100">
+      <dl class="divide-y divide-gray-100">
+        <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+          <dt class="text-sm font-medium leading-6 text-gray-900">Persona de Contacto</dt>
+          <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ company.contact_person or 'No especificado' }}</dd>
+        </div>
+        <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+          <dt class="text-sm font-medium leading-6 text-gray-900">Correo Electrónico</dt>
+          <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ company.email or 'No especificado' }}</dd>
+        </div>
+        <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+          <dt class="text-sm font-medium leading-6 text-gray-900">Teléfono</dt>
+          <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ company.phone_number or 'No especificado' }}</dd>
+        </div>
+        <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+          <dt class="text-sm font-medium leading-6 text-gray-900">Dirección</dt>
+          <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ company.address or 'No especificada' }}</dd>
+        </div>
+        <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+          <dt class="text-sm font-medium leading-6 text-gray-900">{{ company.tax_id_name or 'Identificación Fiscal' }}</dt>
+          <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ company.tax_id_value or 'No especificado' }}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</div>

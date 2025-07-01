@@ -1,27 +1,53 @@
+from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
-from pydantic import BaseModel, HttpUrl
-
+# --- Esquemas para MediaFile ---
 
 class MediaFileBase(BaseModel):
-    description: Optional[str] = None
-    file_url: HttpUrl
-    media_type: str
-    is_active: bool = True
-    company_id: int
-
+    """
+    Esquema base con los campos comunes para un archivo multimedia.
+    """
+    name: Optional[str] = None
+    file_type: Optional[str] = None
+    url: Optional[str] = None
+    status: bool = True
+    duration_seconds: int = 10
 
 class MediaFileCreate(MediaFileBase):
-    pass
-
+    """
+    Esquema para la creación de un nuevo archivo multimedia en la base de datos.
+    Hereda todos los campos de MediaFileBase.
+    """
+    name: str
+    file_type: str
+    url: str
+    company_id: int
 
 class MediaFileUpdate(BaseModel):
-    description: Optional[str]
-    file_url: Optional[HttpUrl]
-    media_type: Optional[str]
-    is_active: Optional[bool]
+    """
+    Esquema para actualizar un archivo multimedia existente.
+    Todos los campos son opcionales.
+    """
+    name: Optional[str] = None
+    status: Optional[bool] = None
+    duration_seconds: Optional[int] = None
 
-
-class MediaFileOut(MediaFileBase):
+class MediaFileInDBBase(MediaFileBase):
+    """
+    Esquema base para los datos de un archivo tal como están en la DB.
+    """
     id: int
-    model_config = {"from_attributes": True}
+    company_id: int
+    date_create: datetime
+
+    class Config:
+        from_attributes = True
+
+class MediaFile(MediaFileInDBBase):
+    """
+    Esquema principal para devolver en la API.
+    Este es el modelo que se enviará a los clientes.
+    """
+    pass
+

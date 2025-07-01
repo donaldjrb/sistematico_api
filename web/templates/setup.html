@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+
+{% block title %}Configuración Inicial - Sistemático{% endblock %}
+
+{% block content %}
+<div class="bg-gray-100 font-sans">
+  <div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    
+    <div class="max-w-4xl w-full space-y-8">
+      <div>
+        <div class="flex justify-center">
+            <svg class="h-12 w-auto text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+            </svg>
+        </div>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Configuración Inicial del Sistema
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          Bienvenido. Por favor, registra la primera compañía y su usuario administrador.
+        </p>
+      </div>
+
+      <div x-data="{ step: 'company' }" class="bg-white p-8 shadow-2xl rounded-2xl">
+        
+        <nav class="flex justify-center border-b border-gray-200 mb-8">
+          <a href="#" @click.prevent="step = 'company'" :class="{ 'border-indigo-500 text-indigo-600': step === 'company', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': step !== 'company' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+            1. Datos de la Compañía
+          </a>
+          <a href="#" @click.prevent="step = 'user'" :class="{ 'border-indigo-500 text-indigo-600': step === 'user', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': step !== 'user' }" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8">
+            2. Datos del Administrador
+          </a>
+        </nav>
+
+        <form action="/setup" method="POST" enctype="multipart/form-data">
+          <!-- Paso 1: Datos de la Compañía -->
+          <div x-show="step === 'company'" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-6 gap-6">
+                <div class="sm:col-span-6">
+                    <label for="company_name" class="block text-sm font-medium text-gray-700">Nombre de la Compañía</label>
+                    <input type="text" name="company_name" id="company_name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="sm:col-span-3">
+                    <label for="country" class="block text-sm font-medium text-gray-700">País</label>
+                    <input type="text" name="country" id="country" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="sm:col-span-3">
+                    <label for="contact_person" class="block text-sm font-medium text-gray-700">Persona de Contacto</label>
+                    <input type="text" name="contact_person" id="contact_person" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="tax_id_name" class="block text-sm font-medium text-gray-700">ID Fiscal (Ej: RIF)</label>
+                    <input type="text" name="tax_id_name" id="tax_id_name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="sm:col-span-4">
+                    <label for="tax_id_value" class="block text-sm font-medium text-gray-700">Nº de ID Fiscal</label>
+                    <input type="text" name="tax_id_value" id="tax_id_value" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="sm:col-span-6">
+                    <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
+                    <textarea id="address" name="address" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                </div>
+                <div class="sm:col-span-3">
+                    <label for="company_email" class="block text-sm font-medium text-gray-700">Email de la Compañía</label>
+                    <input type="email" name="company_email" id="company_email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="sm:col-span-3">
+                    <label for="phone_number" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <input type="tel" name="phone_number" id="phone_number" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div class="sm:col-span-6">
+                    <label for="logo_file" class="block text-sm font-medium text-gray-700">Logo de la Compañía (Opcional)</label>
+                    <input type="file" name="logo_file" id="logo_file" accept="image/png, image/jpeg, image/svg+xml" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                </div>
+            </div>
+            <div class="flex justify-end pt-5">
+              <button type="button" @click="step = 'user'" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Siguiente
+              </button>
+            </div>
+          </div>
+
+          <!-- Paso 2: Datos del Administrador -->
+          <div x-show="step === 'user'" x-cloak class="space-y-6"
+               x-data="{
+                 password: '',
+                 get length() { return this.password.length >= 8 },
+                 get uppercase() { return /[A-Z]/.test(this.password) },
+                 get lowercase() { return /[a-z]/.test(this.password) },
+                 get number() { return /[0-9]/.test(this.password) },
+                 get special() { return /[!@#$%^&*(),.?_=+;:'-`~]/.test(this.password) },
+                 get allValid() { return this.length && this.uppercase && this.lowercase && this.number && this.special }
+               }">
+            <div class="grid grid-cols-1 sm:grid-cols-6 gap-6">
+              <div class="sm:col-span-6">
+                <label for="admin_full_name" class="block text-sm font-medium text-gray-700">Nombre Completo del Admin</label>
+                <input type="text" name="admin_full_name" id="admin_full_name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+
+              <div class="sm:col-span-6">
+                <label for="admin_email" class="block text-sm font-medium text-gray-700">Email del Admin</label>
+                <input id="admin_email" name="admin_email" type="email" required autocomplete="email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+
+              <div class="sm:col-span-6">
+                <label for="admin_password" class="block text-sm font-medium text-gray-700">Contraseña del Admin</label>
+                <input type="password" name="admin_password" id="admin_password" required x-model="password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+              </div>
+
+              <!-- Validador de Contraseña -->
+              <div class="sm:col-span-6 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                <span :class="length ? 'text-green-600' : 'text-gray-500'" class="flex items-center text-sm">
+                  <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                  8 o más caracteres
+                </span>
+                <span :class="uppercase ? 'text-green-600' : 'text-gray-500'" class="flex items-center text-sm">
+                  <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                  Una letra mayúscula
+                </span>
+                <span :class="lowercase ? 'text-green-600' : 'text-gray-500'" class="flex items-center text-sm">
+                   <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                  Una letra minúscula
+                </span>
+                <span :class="number ? 'text-green-600' : 'text-gray-500'" class="flex items-center text-sm">
+                   <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                  Un número
+                </span>
+                <span :class="special ? 'text-green-600' : 'text-gray-500'" class="flex items-center text-sm">
+                   <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                  Un carácter especial (!@#$..)
+                </span>
+              </div>
+            </div>
+            <div class="flex justify-between pt-5">
+              <button type="button" @click="step = 'company'" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Anterior
+              </button>
+              <button type="submit" :disabled="!allValid" :class="{ 'opacity-50 cursor-not-allowed': !allValid }" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                Finalizar y Guardar Configuración
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    {% if error %}
+    <div class="mt-4 max-w-md w-full mx-auto">
+        <div class="bg-red-100 border-l-4 border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <strong class="font-bold">Error:</strong>
+            <span class="block sm:inline">{{ error }}</span>
+        </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

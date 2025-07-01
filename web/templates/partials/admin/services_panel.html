@@ -1,0 +1,35 @@
+{#
+  Ruta: web/templates/partials/admin/services_panel.html
+  Propósito: Panel principal para la gestión de Servicios.
+#}
+<div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+  <div class="px-4 py-5 sm:p-6">
+    <div class="sm:flex sm:items-start sm:justify-between">
+      <div class="sm:flex-auto">
+        <h2 class="text-base font-semibold leading-6 text-gray-900">Gestión de Servicios</h2>
+        <p class="mt-2 text-sm text-gray-700">Añade, edita y gestiona los servicios que tu compañía ofrece para la atención de tickets.</p>
+      </div>
+      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+        <button 
+          @click="isModalOpen = true"
+          hx-get="/admin/services/add-form"
+          hx-target="#modal-content"
+          hx-swap="innerHTML"
+          type="button"
+          class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          Añadir Servicio
+        </button>
+      </div>
+    </div>
+    
+    <!-- Contenedor que cargará la tabla de servicios -->
+    <div 
+      id="services-table-container"
+      class="mt-8 flow-root"
+      hx-get="/admin/services/table"
+      hx-trigger="load, refreshServiceList from:body"
+      hx-swap="innerHTML">
+      <p class="py-8 text-center text-gray-500">Cargando lista de servicios...</p>
+    </div>
+  </div>
+</div>

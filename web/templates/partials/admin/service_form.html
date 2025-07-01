@@ -1,0 +1,90 @@
+{#
+  Ruta: web/templates/partials/admin/service_form.html
+  Propósito: Formulario FINAL para añadir/editar servicios, incluyendo el campo "Requiere Pago".
+#}
+{% set is_edit = service and service.id %}
+<div class="bg-white">
+  <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+    <h3 class="text-lg font-semibold leading-6 text-gray-900">
+      {{ 'Editar Servicio' if is_edit else 'Añadir Nuevo Servicio' }}
+    </h3>
+    <p class="mt-1 text-sm text-gray-500">
+      Define un servicio que tu compañía ofrecerá a los clientes.
+    </p>
+  </div>
+  
+  <form
+    hx-post="{{ '/admin/services/' ~ service.id if is_edit else '/admin/services' }}"
+    class="px-4 py-6 sm:px-6 space-y-6"
+  >
+    <div>
+      <label for="name" class="block text-sm font-medium leading-6 text-gray-900">Nombre del Servicio</label>
+      <div class="mt-2">
+        <input type="text" name="name" id="name" required value="{{ service.name if is_edit else '' }}" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+      </div>
+      <p class="mt-2 text-xs text-gray-500">Ej: "Atención al Cliente", "Caja", "Soporte Técnico".</p>
+    </div>
+    
+    <div>
+      <label for="code" class="block text-sm font-medium leading-6 text-gray-900">Código del Servicio</label>
+      <div class="mt-2">
+        <input type="text" name="code" id="code" required value="{{ service.code if is_edit else '' }}" class="block w-full sm:max-w-xs rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+      </div>
+      <p class="mt-2 text-xs text-gray-500">Un código único para el servicio. Ej: "ATC-01", "CAJA".</p>
+    </div>
+
+    <div>
+      <label for="location" class="block text-sm font-medium leading-6 text-gray-900">Ubicación / Puesto</label>
+      <div class="mt-2">
+        <input type="text" name="location" id="location" required value="{{ service.location if is_edit else '' }}" class="block w-full sm:max-w-xs rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+      </div>
+      <p class="mt-2 text-xs text-gray-500">Lugar físico donde se atiende este servicio. Ej: "Taquilla 3", "Piso 2".</p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+      <div class="sm:col-span-3">
+        <label for="max_capacity" class="block text-sm font-medium leading-6 text-gray-900">Capacidad Máxima</label>
+        <div class="mt-2">
+          <input type="number" name="max_capacity" id="max_capacity" min="0" required value="{{ service.max_capacity if is_edit else 0 }}" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600">
+        </div>
+        <p class="mt-2 text-xs text-gray-500">Máximo de tickets en espera. 0 para ilimitado.</p>
+      </div>
+      <div class="sm:col-span-3">
+        <label for="priority_level" class="block text-sm font-medium leading-6 text-gray-900">Nivel de Prioridad</label>
+        <div class="mt-2">
+            <input type="number" name="priority_level" id="priority_level" min="0" max="10" required value="{{ service.priority_level if is_edit else 0 }}" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600">
+        </div>
+        <p class="mt-2 text-xs text-gray-500">De 0 (baja) a 10 (alta).</p>
+      </div>
+    </div>
+
+    <fieldset>
+        <legend class="sr-only">Opciones de Pago</legend>
+        <div class="relative flex items-start">
+            <div class="flex h-6 items-center">
+                <input 
+                    id="requires_payment_checkbox" 
+                    name="requires_payment" 
+                    type="checkbox" 
+                    value="true"
+                    {% if service and service.requires_payment %}checked{% endif %}
+                    class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600">
+            </div>
+            <div class="ml-3 text-sm leading-6">
+                <label for="requires_payment_checkbox" class="font-medium text-gray-900">Requiere Pago</label>
+                <p class="text-xs text-gray-500">Si se marca, los tickets para este servicio se crearán con estado "Pendiente de Pago".</p>
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Botones de Acción -->
+    <div class="bg-gray-50 -mx-4 -mb-6 sm:-mx-6 px-4 py-3 text-right">
+      <button @click="isModalOpen = false" type="button" class="inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+        Cancelar
+      </button>
+      <button type="submit" class="ml-3 inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>

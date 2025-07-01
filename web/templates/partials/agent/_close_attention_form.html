@@ -1,0 +1,58 @@
+{#
+  Ruta: web/templates/partials/agent/_close_attention_form.html
+  Propósito: Formulario modal para que el agente finalice la atención de un ticket.
+#}
+{% set is_closable = ticket and reasons %}
+<div class="bg-white">
+  <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+    <h3 class="text-lg font-semibold leading-6 text-gray-900">
+      Cerrar Atención del Ticket: {{ ticket.ticket_number if ticket else 'N/A' }}
+    </h3>
+    <p class="mt-1 text-sm text-gray-500">
+      Selecciona un motivo de cierre y añade notas si es necesario.
+    </p>
+  </div>
+  
+  {% if is_closable %}
+  <form
+    hx-post="/agent/tickets/{{ ticket.id }}/close"
+    class="px-4 py-6 sm:px-6 space-y-6"
+  >
+    <!-- Motivo de Cierre (Obligatorio) -->
+    <div>
+      <label for="close_reason_id" class="block text-sm font-medium leading-6 text-gray-900">Motivo de Cierre</label>
+      <div class="mt-2">
+        <select id="close_reason_id" name="close_reason_id" required class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600">
+          <option value="" disabled selected>Selecciona un motivo...</option>
+          {% for reason in reasons %}
+          <option value="{{ reason.id }}">{{ reason.reason_text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <!-- Notas de Cierre (Opcional) -->
+    <div>
+      <label for="close_notes" class="block text-sm font-medium leading-6 text-gray-900">Notas Adicionales</label>
+      <div class="mt-2">
+        <textarea id="close_notes" name="close_notes" rows="3" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600"></textarea>
+      </div>
+       <p class="mt-2 text-xs text-gray-500">Este campo es opcional.</p>
+    </div>
+    
+    <!-- Botones de Acción -->
+    <div class="bg-gray-50 -mx-4 -mb-6 sm:-mx-6 px-4 py-3 text-right">
+      <button @click="isModalOpen = false" type="button" class="inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+        Cancelar
+      </button>
+      <button type="submit" class="ml-3 inline-flex justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">
+        Finalizar Ticket
+      </button>
+    </div>
+  </form>
+  {% else %}
+  <div class="p-6 text-center">
+    <p class="text-sm text-gray-600">No se puede cerrar el ticket o no hay motivos de cierre configurados.</p>
+  </div>
+  {% endif %}
+</div>

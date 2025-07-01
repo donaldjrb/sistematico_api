@@ -1,0 +1,61 @@
+<!--
+  Esta plantilla parcial renderiza la galería de archivos multimedia.
+  Es cargada y actualizada dinámicamente por HTMX.
+-->
+{% if media_files %}
+<ul role="list" class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:grid-cols-5 xl:gap-x-8">
+    {% for file in media_files %}
+    <li class="relative">
+        <!-- Vista previa del archivo -->
+        <div class="group block w-full aspect-w-10 aspect-h-7 rounded-lg bg-gray-100 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-gray-100 focus-within:ring-indigo-500 overflow-hidden">
+            {% if file.file_type == 'image' %}
+                <img src="{{ file.url }}" alt="{{ file.name }}" class="object-cover pointer-events-none group-hover:opacity-75">
+            {% elif file.file_type == 'video' %}
+                <video class="object-cover pointer-events-none group-hover:opacity-75" muted loop>
+                    <source src="{{ file.url }}" type="video/mp4">
+                </video>
+            {% endif %}
+        </div>
+        <p class="mt-2 block text-sm font-medium text-gray-900 truncate pointer-events-none">{{ file.name }}</p>
+        <p class="block text-sm font-medium text-gray-500 pointer-events-none">{{ file.duration_seconds }} seg.</p>
+        
+        <!-- Acciones -->
+        <div class="flex items-center justify-between mt-2">
+            <!-- Botón para activar/desactivar -->
+            <button
+                type="button"
+                class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white {{ 'bg-green-600 hover:bg-green-700' if file.status else 'bg-gray-400 hover:bg-gray-500' }}"
+                hx-post="/admin/media-files/{{ file.id }}/toggle-status"
+                hx-target="#media-gallery-container"
+                title="{{ 'Desactivar' if file.status else 'Activar' }}"
+            >
+                {{ 'Activo' if file.status else 'Inactivo' }}
+            </button>
+            
+            <!-- Botón para eliminar (CORREGIDO) -->
+            <button
+                type="button"
+                class="p-1.5 text-gray-400 hover:text-red-600"
+                hx-get="/admin/media-files/{{ file.id }}/confirm-delete"
+                hx-target="#modal-content"
+                @click="isModalOpen = true"
+                title="Eliminar archivo"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<!-- Mensaje para cuando no hay archivos -->
+<div class="text-center py-12">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+        <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l-1.586-1.586a2 2 0 00-2.828 0L6 14m6-6l.586-.586a2 2 0 012.828 0L20 8m-6 6l.586.586a2 2 0 002.828 0L20 14m-6-6l-1-1h-2a2 2 0 00-2 2v2" />
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">No hay archivos multimedia</h3>
+    <p class="mt-1 text-sm text-gray-500">Comience subiendo una imagen o video.</p>
+</div>
+{% endif %}

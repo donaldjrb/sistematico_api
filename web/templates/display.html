@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display de Atención - {{ company.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #e5e7eb; /* gray-200 */
+        }
+
+        /* --- Diseño Adaptable con Viewport Units --- */
+        .header-title { font-size: clamp(1.5rem, 4vh, 2.25rem); }
+        .header-clock { font-size: clamp(1.5rem, 4.5vh, 2.5rem); }
+        .section-title { font-size: clamp(1.1rem, 2.8vh, 1.75rem); }
+        .ticket-called-number { font-size: clamp(2.5rem, 10vh, 5rem); }
+        .ticket-called-location { font-size: clamp(1.25rem, 4.5vh, 2.5rem); }
+        .history-item { font-size: clamp(0.9rem, 2.2vh, 1.25rem); }
+        .queue-item-number { font-size: clamp(1rem, 2.5vh, 1.5rem); }
+        .queue-item-time { font-size: clamp(1rem, 2.5vh, 1.5rem); }
+        .marquee-text { font-size: clamp(1rem, 2.5vh, 1.5rem); }
+
+        /* --- Animaciones y Estilos Adicionales --- */
+        .ticket-highlight {
+            animation: highlight-call 1.5s ease-out;
+        }
+        @keyframes highlight-call {
+            0% { transform: scale(1); background-color: #111827; }
+            30% { transform: scale(1.1); background-color: #facc15; color: #111827; }
+            100% { transform: scale(1); background-color: #111827; }
+        }
+        .marquee-content {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 45s linear infinite;
+        }
+        .marquee-container:hover .marquee-content {
+            animation-play-state: paused;
+        }
+        @keyframes marquee {
+            0%   { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        #audio-prompt {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(10, 10, 10, 0.95);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; cursor: pointer; transition: opacity 0.5s ease-in-out;
+        }
+        #audio-prompt.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="h-screen overflow-hidden">
+
+    <!-- Overlay de Audio -->
+    <div id="audio-prompt">
+        <div class="text-center p-8 max-w-lg">
+            <svg class="mx-auto h-24 w-24 text-sky-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" /></svg>
+            <h2 class="mt-4 text-4xl font-bold">Hacer clic para habilitar sonido</h2>
+            <p class="mt-2 text-lg text-gray-400">Se requiere una interacción para poder reproducir el audio de los llamados.</p>
+        </div>
+    </div>
+    <audio id="chime-sound" preload="auto">
+        <source src="/static/sounds/ring.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="app" class="flex flex-col h-full">
+        <!-- Cabecera -->
+        <header class="py-3 px-6 bg-black bg-opacity-30 flex justify-between items-center border-b border-gray-800 flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <img id="company-logo" src="{{ company.logo_url or '/static/logos/default.png' }}" alt="Logo de la Compañía" class="h-12 max-w-xs object-contain">
+                <h1 id="company-name" class="header-title font-bold text-gray-100">{{ company.name }}</h1>
+            </div>
+            <div class="flex items-center gap-6">
+                <div id="clock" class="header-clock font-bold text-gray-100"></div>
+                <!-- Botón de Pantalla Completa -->
+                <button id="fullscreen-btn" title="Pantalla Completa" class="text-gray-400 hover:text-white transition-colors">
+                    <svg id="fullscreen-icon-open" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v4m0 0h-4m4 0l-5-5" />
+                    </svg>
+                    <svg id="fullscreen-icon-close" xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Contenido Principal -->
+        <main class="grid grid-cols-5 gap-4 p-4 flex-grow overflow-hidden">
+            <!-- Cola de Espera -->
+            <aside class="col-span-1 bg-gray-900 bg-opacity-50 rounded-lg p-4 flex flex-col overflow-hidden">
+                <h2 class="section-title font-bold text-center text-sky-400 border-b-2 border-sky-500 pb-3 mb-4 flex-shrink-0">En Espera</h2>
+                <ul id="waiting-queue-list" class="space-y-3 overflow-y-auto"></ul>
+            </aside>
+            <!-- Publicidad Multimedia -->
+            <section id="ad-container" class="col-span-3 bg-black rounded-lg overflow-hidden relative shadow-2xl">
+                <div id="ad-content" class="w-full h-full"></div>
+                <div id="ad-description" class="absolute bottom-0 left-0 w-full p-4 bg-black bg-opacity-60 text-2xl font-semibold transition-opacity duration-500 opacity-0"></div>
+            </section>
+            <!-- Tickets Llamados -->
+            <aside class="col-span-1 bg-gray-900 bg-opacity-50 rounded-lg p-4 flex flex-col overflow-hidden">
+                <h2 class="section-title font-bold text-center text-yellow-400 border-b-2 border-yellow-500 pb-3 mb-4 flex-shrink-0">Llamando a</h2>
+                <div id="call-display" class="flex-grow flex flex-col justify-center items-center bg-gray-900 rounded-lg p-2 text-center">
+                    <p class="ticket-called-number font-black text-yellow-300 tracking-wider" id="ticket-number">---</p>
+                    <p class="ticket-called-location font-bold text-white mt-2" id="ticket-location">---</p>
+                </div>
+                <div class="mt-4 flex-shrink-0">
+                    <h3 class="text-lg font-bold text-center mb-3">Historial Reciente</h3>
+                    <ul id="history-list" class="space-y-2 text-center text-gray-400 history-item"></ul>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Pie de Página -->
+        <footer class="bg-black bg-opacity-30 border-t border-gray-800 py-3 overflow-hidden flex-shrink-0">
+            <div class="marquee-container">
+                <p class="marquee-content marquee-text font-semibold text-gray-300"></p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const COMPANY_ID = {{ company.id }};
+            const timers = {};
+            const ui = {
+                audioPrompt: document.getElementById('audio-prompt'),
+                chimeSound: document.getElementById('chime-sound'),
+                clock: document.getElementById('clock'),
+                waitingQueueList: document.getElementById('waiting-queue-list'),
+                marqueeContent: document.querySelector('.marquee-content'),
+                fullscreenBtn: document.getElementById('fullscreen-btn'),
+                fullscreenOpenIcon: document.getElementById('fullscreen-icon-open'),
+                fullscreenCloseIcon: document.getElementById('fullscreen-icon-close'),
+                adContent: document.getElementById('ad-content'),
+                adDescription: document.getElementById('ad-description'),
+                callDisplay: document.getElementById('call-display'),
+                ticketNumber: document.getElementById('ticket-number'),
+                ticketLocation: document.getElementById('ticket-location'),
+                historyList: document.getElementById('history-list')
+            };
+
+            // --- INICIO DE CORRECCIÓN: Se reintroduce la lógica del Audio Prompt ---
+            if (ui.audioPrompt) {
+                ui.audioPrompt.addEventListener('click', () => {
+                    if (ui.chimeSound) {
+                        ui.chimeSound.play().then(() => {
+                            ui.chimeSound.pause();
+                            ui.chimeSound.currentTime = 0;
+                        }).catch(error => console.error("[Display] Error al inicializar audio:", error));
+                    }
+                    ui.audioPrompt.classList.add('hidden');
+                }, { once: true });
+            }
+            // --- FIN DE CORRECCIÓN ---
+
+            // --- LÓGICA DE PANTALLA COMPLETA ---
+            const toggleFullScreen = () => {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(err => console.error(err));
+                else if (document.exitFullscreen) document.exitFullscreen();
+            };
+            if (ui.fullscreenBtn) {
+                ui.fullscreenBtn.addEventListener('click', toggleFullScreen);
+            }
+            document.addEventListener('fullscreenchange', () => {
+                const isFullscreen = !!document.fullscreenElement;
+                if(ui.fullscreenOpenIcon) ui.fullscreenOpenIcon.classList.toggle('hidden', isFullscreen);
+                if(ui.fullscreenCloseIcon) ui.fullscreenCloseIcon.classList.toggle('hidden', !isFullscreen);
+            });
+
+            // --- LÓGICA DEL RELOJ ---
+            const updateClock = () => { if (ui.clock) ui.clock.textContent = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' }); };
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // --- LÓGICA DE LA COLA DE ESPERA ---
+            const updateElapsedTime = (element, creationTime) => {
+                const start = new Date(creationTime).getTime();
+                const update = () => {
+                    const diff = new Date().getTime() - start;
+                    const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');
+                    const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+                    element.textContent = `${minutes}:${seconds}`;
+                };
+                update();
+                return setInterval(update, 1000);
+            };
+            const renderWaitingQueue = (queue) => {
+                if (!ui.waitingQueueList) return;
+                ui.waitingQueueList.innerHTML = '';
+                Object.values(timers).forEach(clearInterval);
+                if (!queue || queue.length === 0) {
+                    ui.waitingQueueList.innerHTML = '<li class="text-center text-gray-500 mt-8">No hay tickets en espera.</li>';
+                    return;
+                }
+                queue.forEach(ticket => {
+                    const li = document.createElement('li');
+                    li.className = 'bg-gray-800 p-3 rounded-md shadow-md flex justify-between items-center';
+                    const numSpan = document.createElement('span');
+                    numSpan.className = 'queue-item-number font-bold';
+                    numSpan.textContent = ticket.ticket_number;
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'queue-item-time font-mono text-sky-300';
+                    li.append(numSpan, timeSpan);
+                    ui.waitingQueueList.appendChild(li);
+                    timers[ticket.id] = updateElapsedTime(timeSpan, ticket.created_at);
+                });
+            };
+
+            // --- LÓGICA DE LA MARQUESINA ---
+            const textAds = {{ text_advertisements|tojson }};
+            if (ui.marqueeContent) ui.marqueeContent.textContent = (textAds && textAds.length > 0) ? textAds.map(ad => `✦ ${ad.description}`).join('     ') : `Bienvenido a ${'{{ company.name }}'}`;
+
+            // --- LÓGICA DEL CARRUSEL MULTIMEDIA ---
+            const mediaPlaylist = {{ media_playlist|tojson }};
+            let currentMediaIndex = 0;
+            const playNextMedia = () => {
+                if (!mediaPlaylist || mediaPlaylist.length === 0 || !ui.adContent) {
+                    if(ui.adContent) ui.adContent.style.backgroundImage = `url('/static/logos/default_background.png')`;
+                    return;
+                };
+                
+                const media = mediaPlaylist[currentMediaIndex];
+                ui.adContent.innerHTML = '';
+                ui.adDescription.classList.add('opacity-0');
+
+                if (media.file_type === 'image') {
+                    const img = document.createElement('img');
+                    img.src = media.url;
+                    img.className = 'w-full h-full object-cover';
+                    ui.adContent.appendChild(img);
+                    ui.adDescription.textContent = media.name;
+                    ui.adDescription.classList.remove('opacity-0');
+                    setTimeout(playNextMedia, media.duration_seconds * 1000);
+                } else if (media.file_type === 'video') {
+                    const video = document.createElement('video');
+                    video.src = media.url;
+                    video.className = 'w-full h-full object-cover';
+                    video.muted = true;
+                    video.autoplay = true;
+                    video.onended = playNextMedia;
+                    video.onerror = () => {
+                        console.error(`Error al cargar el video: ${media.url}`);
+                        playNextMedia();
+                    };
+                    ui.adContent.appendChild(video);
+                    ui.adDescription.textContent = media.name;
+                    ui.adDescription.classList.remove('opacity-0');
+                }
+                currentMediaIndex = (currentMediaIndex + 1) % mediaPlaylist.length;
+            };
+
+            // --- MANEJADOR DE EVENTO NEW_CALL ---
+            const handleNewCall = (data) => {
+                try {
+                    ui.ticketNumber.textContent = data.ticket_number;
+                    ui.ticketLocation.textContent = data.location;
+                    ui.callDisplay.classList.remove('ticket-highlight');
+                    void ui.callDisplay.offsetWidth;
+                    ui.callDisplay.classList.add('ticket-highlight');
+                    if (ui.chimeSound) { ui.chimeSound.currentTime = 0; ui.chimeSound.play().catch(e => console.error(e)); }
+                    const newHistoryItem = document.createElement('li');
+                    newHistoryItem.className = 'history-item';
+                    newHistoryItem.textContent = `${data.ticket_number} - ${data.location}`;
+                    ui.historyList.prepend(newHistoryItem);
+                    while (ui.historyList.children.length > 5) ui.historyList.removeChild(ui.historyList.lastChild);
+                } catch (e) { console.error('[Display] Error al actualizar UI de llamado:', e); }
+            };
+
+            // --- CONEXIÓN WEBSOCKET ---
+            const connectWebSocket = () => {
+                const ws = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/${COMPANY_ID}`);
+                ws.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.event === 'new_call' && msg.data) handleNewCall(msg.data);
+                        else if (msg.event === 'queue_update' && msg.data) renderWaitingQueue(msg.data.queue);
+                    } catch (e) { console.error('[Display] Error al procesar mensaje:', e); }
+                };
+                ws.onclose = () => setTimeout(connectWebSocket, 5000);
+                ws.onerror = (e) => { console.error('[Display] Error de WebSocket:', e); ws.close(); };
+            };
+
+            // --- INICIALIZACIÓN ---
+            connectWebSocket();
+            renderWaitingQueue({{ initial_queue|tojson }});
+            playNextMedia();
+        });
+    </script>
+</body>
+</html>

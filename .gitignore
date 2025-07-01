@@ -216,3 +216,6 @@ venv/
 #scripts/*_dev.py
 temp_run.py
 
+#mis archivos
+contexto.txt
+estructura_fontend.txt

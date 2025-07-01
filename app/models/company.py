@@ -1,8 +1,8 @@
 from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
+# Corregido para usar tu estructura existente
 from app.db.session import Base
-
 
 class Company(Base):
     __tablename__ = "companies"
@@ -19,6 +19,12 @@ class Company(Base):
     contact_person = Column(String(100))
     is_active = Column(Boolean, default=True)
 
-    # relaciones
+    # --- Relaciones Inversas Completas ---
     users = relationship("User", back_populates="company", cascade="all, delete")
     services = relationship("Service", back_populates="company", cascade="all, delete")
+    tickets = relationship("Ticket", back_populates="company", cascade="all, delete")
+    advertisements = relationship("Advertisement", back_populates="company", cascade="all, delete")
+    close_reasons = relationship("CloseReason", back_populates="company", cascade="all, delete")
+    media_files = relationship("MediaFile", back_populates="company", cascade="all, delete")
+
+

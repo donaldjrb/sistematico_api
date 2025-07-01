@@ -1,0 +1,123 @@
+{#
+  Ruta: web/templates/partials/agent/_agent_ticket_panel.html
+  Propósito: Muestra un único ticket y las acciones disponibles.
+#}
+
+{% if ticket %}
+<div class="bg-white shadow-lg rounded-lg overflow-hidden">
+  <!-- Cabecera del Ticket -->
+  <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-medium text-indigo-600">Próximo en la Cola</p>
+        <p class="text-2xl font-bold text-gray-900 font-mono {% if ticket.priority_level == 10 %} text-red-600 {% endif %}">{{ ticket.ticket_number }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gray-500">Servicio</p>
+        <p class="text-lg font-semibold text-gray-800">{{ ticket.service.name }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cuerpo del Ticket -->
+  <div class="p-6">
+    {# --- ESTADO 1: TICKET EN ESPERA --- #}
+    {% if ticket.status != 'atendiendo' %}
+    <div class="text-center">
+      <p class="text-lg text-gray-600 mb-6">El paciente está en espera. Presiona "Llamar" para iniciar la atención.</p>
+      <button
+        hx-post="/agent/tickets/{{ ticket.id }}/call"
+        hx-target="#ticket-panel-container"
+        hx-swap="innerHTML"
+        class="w-full inline-flex items-center justify-center gap-x-2 rounded-md bg-green-600 px-4 py-3 text-lg font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+      >
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M2.273 6.021a8.956 8.956 0 0115.454 0" />
+          <path fill-rule="evenodd" d="M4.685 8.341a5.956 5.956 0 018.63 0M6.863 10.66a2.956 2.956 0 014.274 0M10 15.5a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+        </svg>
+        Llamar Paciente
+      </button>
+    </div>
+
+    {# --- ESTADO 2: TICKET EN ATENCIÓN --- #}
+    {% else %}
+    <div x-data="{ activeAction: '' }">
+      <div class="text-center mb-4">
+        <p class="text-lg font-semibold text-gray-800">Atendiendo a: <span class="text-indigo-600">{{ ticket.ticket_number }}</span></p>
+        <p class="text-sm text-gray-500">Llamado {{ ticket.call_count }} {% if ticket.call_count == 1 %}vez{% else %}veces{% endif %}</p>
+      </div>
+
+      <!-- Acciones de Atención -->
+      <div class="grid grid-cols-2 gap-3 mt-6">
+        <button
+          hx-post="/agent/tickets/{{ ticket.id }}/call"
+          hx-target="#ticket-panel-container"
+          hx-swap="innerHTML"
+          class="inline-flex items-center justify-center gap-x-1.5 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          {% if ticket.call_count >= 3 %}disabled title="Límite de llamados alcanzado"{% endif %}>
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M2.273 6.021a8.956 8.956 0 0115.454 0" /></svg>
+          Volver a Llamar
+        </button>
+
+        <button
+          hx-post="/agent/tickets/{{ ticket.id }}/skip"
+          hx-target="#ticket-panel-container"
+          hx-swap="innerHTML"
+          class="inline-flex items-center justify-center gap-x-1.5 rounded-md bg-gray-400 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-500">
+          <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 011.414-1.414L10 8.586l4.293-4.293a1 1 0 011.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+          Saltar
+        </button>
+      </div>
+
+      <!-- Formulario de Acciones Finales -->
+      <div class="mt-6 border-t pt-6">
+        <div class="space-y-4">
+          <!-- Derivar -->
+          <button @click="activeAction = (activeAction === 'derive' ? '' : 'derive')" class="w-full text-left font-semibold text-gray-700">Derivar a otro servicio...</button>
+          <div x-show="activeAction === 'derive'" x-transition class="p-4 bg-gray-50 rounded-md">
+            <form hx-post="/agent/tickets/{{ ticket.id }}/derive" hx-target="#ticket-panel-container">
+              <label for="derive_service_id" class="block text-sm font-medium text-gray-900">Seleccionar Servicio</label>
+
+                <select id="derive_service_id" name="new_service_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="" disabled selected>Selecciona un servicio...</option>
+                    {% for service in available_services %}
+                    <option value="{{ service.id }}">{{ service.name }}</option>
+                    {% endfor %}
+                </select>              
+              <button type="submit" class="mt-3 w-full rounded-md bg-yellow-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-yellow-400">Confirmar Derivación</button>
+            </form>
+          </div>
+
+          <!-- Cerrar Atención -->
+          <button @click="activeAction = (activeAction === 'close' ? '' : 'close')" class="w-full text-left font-semibold text-gray-700">Cerrar atención...</button>
+          <div x-show="activeAction === 'close'" x-transition class="p-4 bg-gray-50 rounded-md">
+            <form hx-post="/agent/tickets/{{ ticket.id }}/close" hx-target="#ticket-panel-container">
+              <label for="close_reason_id" class="block text-sm font-medium text-gray-900">Motivo de Cierre (Obligatorio)</label>
+                  <select id="close_reason_id" name="close_reason_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                      <option value="" disabled selected>Selecciona un motivo...</option>
+                      {% for reason in close_reasons %}
+                      <option value="{{ reason.id }}">{{ reason.reason_text }}</option>
+                      {% endfor %}
+                  </select>              <div class="mt-4">
+                <label for="close_notes" class="block text-sm font-medium text-gray-900">Notas Adicionales</label>
+                <textarea id="close_notes" name="close_notes" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+              </div>
+              <button type="submit" class="mt-3 w-full rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">Finalizar Ticket</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% else %}
+<div class="text-center p-12 bg-white shadow-lg rounded-lg">
+  <svg class="mx-auto h-16 w-16 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+  <h3 class="mt-4 text-2xl font-semibold text-gray-900">¡Cola de atención vacía!</h3>
+  <p class="mt-2 text-base text-gray-500">No hay tickets pendientes en tu servicio. ¡Buen trabajo!</p>
+</div>
+{% endif %}

@@ -1,0 +1,46 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="mt-8 flow-root">
+    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+        {% if tickets %}
+        <table class="min-w-full divide-y divide-gray-300">
+          <!-- ... (thead se mantiene igual) ... -->
+          <thead>
+            <tr>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">N° Ticket</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Servicio</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Hora de Creación</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Teléfono</th>
+              <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            {% for ticket in tickets %}
+            <tr id="ticket-row-{{ ticket.id }}" class="htmx-settling:opacity-50">
+              <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0"><div class="font-medium text-gray-900 font-mono">{{ ticket.ticket_number }}</div></td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ ticket.service.name }}</td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ ticket.created_at.strftime('%I:%M:%S %p') }}</td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ ticket.customer_phone or 'N/A' }}</td>
+              <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
+                <!-- === INICIO DE CORRECCIÓN === -->
+                <button 
+                  hx-post="/ui/cashier/tickets/{{ ticket.id }}/process-payment" 
+                  hx-target="#ticket-row-{{ ticket.id }}"
+                  hx-swap="outerHTML"
+                  class="inline-flex items-center gap-x-1.5 rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 disabled:opacity-50">
+                  <svg class="w-5 h-5 -ml-1" xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" viewBox="0 0 20 20" fill="currentColor"><path d="M3.5 4.5a.5.5 0 00-1 0v11a.5.5 0 001 0v-11z" /><path d="M4.5 4.5a.5.5 0 01.5-.5h10a.5.5 0 01.5.5v11a.5.5 0 01-.5.5h-10a.5.5 0 01-.5-.5v-11zM14 7a.5.5 0 00-1 0v1a.5.5 0 001 0V7z" /><path d="M5 9.5a.5.5 0 01.5-.5h8a.5.5 0 01.5.5v1a.5.5 0 01-.5.5h-8a.5.5 0 01-.5-.5v-1z" /></svg>
+                  Confirmar Pago
+                </button>
+                <!-- === FIN DE CORRECCIÓN === -->
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <!-- ... (contenido de tabla vacía se mantiene igual) ... -->
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,7 +1,5 @@
 from typing import List, Optional
-
 from sqlalchemy.orm import Session
-
 from app.core.security import hash_password, verify_password
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate

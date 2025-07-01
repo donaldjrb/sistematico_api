@@ -1,0 +1,39 @@
+<!--
+  Este archivo es el contenedor principal para la gestión de multimedia.
+  Muestra el encabezado y un botón para añadir nuevos archivos.
+  Utiliza HTMX para cargar la galería de forma dinámica.
+-->
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Encabezado del Panel -->
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-semibold text-gray-900">Gestión Multimedia</h1>
+            <p class="mt-2 text-sm text-gray-700">Añada, active o elimine las imágenes y videos que se mostrarán en el display de atención.</p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <!-- Botón para abrir el modal de subida -->
+            <button
+                type="button"
+                class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                hx-get="/admin/media-files/add-form"
+                hx-target="#modal-content" 
+                hx-trigger="click"
+                @click="isModalOpen = true"
+            >
+                Añadir Nuevo Archivo
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenedor donde se cargará la galería de archivos -->
+    <div
+        id="media-gallery-container"
+        class="mt-8"
+        hx-get="/admin/media-files/gallery"
+        hx-trigger="load, refreshMediaGallery from:body"
+        hx-swap="innerHTML"
+    >
+        <!-- Un indicador de carga mientras HTMX obtiene los datos -->
+        <p class="text-center text-gray-500 py-8">Cargando galería...</p>
+    </div>
+</div>

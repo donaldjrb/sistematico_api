@@ -1,0 +1,88 @@
+<div class="px-4 sm:px-6 lg:px-8">
+  <div class="mt-8 flow-root">
+    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+      <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+        {% if tickets %}
+        <table class="min-w-full divide-y divide-gray-300">
+          <thead>
+            <tr>
+              <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">N° Ticket</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Servicio</th>
+              <th scope="col" class="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">Estado</th>
+              <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Hora de Llegada</th>
+              <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            {% for ticket in tickets %}
+            <tr id="ticket-row-{{ ticket.id }}" class="htmx-settling:opacity-50">
+              <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-0">
+                <div class="font-medium text-gray-900 font-mono text-lg {% if ticket.priority_level == 10 %} text-red-600 font-bold {% endif %}">{{ ticket.ticket_number }}</div>
+                {# INICIO DE MODIFICACIÓN: Mostrar contador de llamados #}
+                {% if ticket.call_count > 0 %}
+                <div class="text-xs text-yellow-600">Llamado {{ ticket.call_count }} {% if ticket.call_count == 1 %}vez{% else %}veces{% endif %}</div>
+                {% endif %}
+                {# FIN DE MODIFICACIÓN #}
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ ticket.service.name }}</td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-center">
+                  {% if ticket.status == 'pagado' %} <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">Pagado</span>
+                  {% elif ticket.status == 'derivado' %} <span class="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-medium text-orange-800">Derivado</span>
+                  {% else %} <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">En espera</span>
+                  {% endif %}
+              </td>
+              <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                {{ (ticket.updated_at or ticket.created_at).strftime('%I:%M:%S %p') }}
+              </td>
+              <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0 space-x-2">
+                {# INICIO DE MODIFICACIÓN: Botones de Acción #}
+                <button 
+                  hx-post="/agent/tickets/{{ ticket.id }}/call"
+                  hx-trigger="click"
+                  hx-target="closest tr"
+                  hx-swap="outerHTML"
+                  class="inline-flex items-center gap-x-1.5 rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 disabled:opacity-50"
+                  {% if ticket.call_count >= 3 %}disabled title="Límite de llamados alcanzado"{% endif %}>
+                    <svg class="-ml-0.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2.273 6.021a8.956 8.956 0 0115.454 0" />
+                      <path fill-rule="evenodd" d="M4.685 8.341a5.956 5.956 0 018.63 0M6.863 10.66a2.956 2.956 0 014.274 0M10 15.5a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                  Llamar
+                </button>
+                <button 
+                  @click="isModalOpen = true"
+                  hx-get="/ui/agent/tickets/{{ ticket.id }}/derive-form"
+                  hx-target="#modal-content"
+                  hx-swap="innerHTML"
+                  class="inline-flex items-center gap-x-1.5 rounded-md bg-yellow-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-yellow-400">
+                  <svg class="w-5 h-5 -ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.28 9.47a.75.75 0 010 1.06l-3.75 3.75a.75.75 0 11-1.06-1.06L13.19 10 10.47 7.28a.75.75 0 011.06-1.06l3.75 3.75z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M4.72 7.28a.75.75 0 011.06 0L9.53 11.03a.75.75 0 01-1.06 1.06L4.72 8.34a.75.75 0 010-1.06z" clip-rule="evenodd" /></svg>
+                  Derivar
+                </button>
+                <button 
+                  @click="isModalOpen = true"
+                  hx-get="/agent/tickets/{{ ticket.id }}/close-form"
+                  hx-target="#modal-content"
+                  hx-swap="innerHTML"
+                  class="inline-flex items-center gap-x-1.5 rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500">
+                  <svg class="-ml-0.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  Cerrar
+                </button>
+                {# FIN DE MODIFICACIÓN #}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <div class="text-center p-8 border-t border-gray-200">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            <h3 class="mt-2 text-sm font-semibold text-gray-900">No hay tickets en la cola</h3>
+            <p class="mt-1 text-sm text-gray-500">La cola de atención para tu servicio está vacía.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

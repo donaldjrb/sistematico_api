@@ -1,0 +1,29 @@
+<!-- Es solo la cáscara. La lógica de Alpine se hereda de dashboard.html -->
+<div class="bg-white shadow-sm sm:rounded-lg">
+  <div class="px-4 py-5 sm:p-6">
+    <div class="sm:flex sm:items-start sm:justify-between">
+      <div class="sm:flex-auto">
+        <h2 class="text-base font-semibold leading-6 text-gray-900">Usuarios</h2>
+        <p class="mt-2 text-sm text-gray-700">Gestiona los perfiles de administradores y agentes de tu compañía.</p>
+      </div>
+      <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+        <!-- Este botón ahora funcionará porque `isModalOpen` es global -->
+        <button @click="isModalOpen = true"
+                hx-get="/admin/users/add-form"
+                hx-target="#modal-content"
+                hx-swap="innerHTML"
+                type="button"
+                class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+          Añadir usuario
+        </button>
+      </div>
+    </div>
+    <!-- Contenedor para la tabla que se refrescará con el evento 'refreshList' -->
+    <div class="mt-8 flow-root"
+         hx-get="/admin/users/table"
+         hx-trigger="load, refreshList from:body"
+         hx-swap="innerHTML">
+      <p class="py-8 text-center text-gray-500">Cargando...</p>
+    </div>
+  </div>
+</div>

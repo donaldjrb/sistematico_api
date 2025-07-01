@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ error_title or 'Error' }} - Sistemático{% endblock %}
+
+{% block content %}
+<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
+      <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+        </svg>
+      </div>
+      <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+        {{ error_title or 'Ha ocurrido un error' }}
+      </h2>
+      <div class="mt-4">
+        <p class="text-sm text-gray-600">
+          {{ error_message or 'No se pudo completar la solicitud.'}}
+        </p>
+      </div>
+      <div class="mt-8">
+        <a href="/" class="text-sm font-semibold text-indigo-600 hover:text-indigo-500">Volver a la página principal</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

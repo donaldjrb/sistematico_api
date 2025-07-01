@@ -1,0 +1,114 @@
+<!-- ================================================================== -->
+<!-- ARCHIVO: web/templates/cashier_dashboard.html (CORREGIDO)          -->
+<!-- Propósito: Se ajusta el hx-get para apuntar a la ruta correcta     -->
+<!--            y funcional '/ui/cashier/table'.                        -->
+<!-- ================================================================== -->
+{% extends "layout.html" %}
+
+{% block title %}Caja - Sistemático{% endblock %}
+
+{% block content %}
+<div 
+  x-data="{ 
+    showNotification: false, 
+    notificationText: '', 
+    notificationType: 'success' 
+  }"
+  class="min-h-screen bg-gray-100"
+  @htmx:after-request.window="
+    const triggerHeader = event.detail.xhr.getResponseHeader('HX-Trigger');
+    if (triggerHeader) {
+        try {
+            const triggers = JSON.parse(triggerHeader);
+            if (triggers.refreshCashierList !== undefined) {
+                const cashierTable = document.querySelector('#cashier-table-container');
+                if (cashierTable) { htmx.trigger(cashierTable, 'refreshCashierList'); }
+            }
+            if (triggers.showNotification) {
+                notificationText = triggers.showNotification.text;
+                notificationType = triggers.showNotification.type || 'success';
+                showNotification = true;
+                setTimeout(() => showNotification = false, 3000);
+            }
+        } catch (e) { console.error('Error parsing HX-Trigger header:', e); }
+    } else if (event.detail.failed) {
+        try {
+            const errorData = JSON.parse(event.detail.xhr.responseText);
+            notificationText = errorData.detail || 'Ocurrió un error inesperado.';
+            notificationType = 'error';
+            showNotification = true;
+            setTimeout(() => showNotification = false, 4000);
+        } catch (e) {
+            notificationText = 'Error de conexión con el servidor.';
+            notificationType = 'error';
+            showNotification = true;
+            setTimeout(() => showNotification = false, 4000);
+        }
+    }
+  "
+>
+  <!-- Barra de Navegación del Agente -->
+  <nav class="bg-white shadow-sm border-b border-gray-200">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex h-16 justify-between">
+        <div class="flex">
+          <div class="flex flex-shrink-0 items-center">
+            <img class="block h-8 w-auto" src="{{ company.logo_url if company and company.logo_url else '/static/logos/default_logo.svg' }}" alt="{{ company.name or 'Sistemático' }}">
+          </div>
+          <div class="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
+            <span class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" aria-current="page">Caja</span>
+          </div>
+        </div>
+        <div class="hidden sm:ml-6 sm:flex sm:items-center">
+          <!-- Menú de Perfil -->
+          <div x-data="{ open: false }" class="relative ml-3">
+            <div>
+              <button @click="open = !open" type="button" class="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                <span class="sr-only">Abrir menú de usuario</span>
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-500">
+                  <span class="text-sm font-medium leading-none text-white">{{ user.full_name[0] | upper if user.full_name else 'U' }}</span>
+                </span>
+              </button>
+            </div>
+            <div x-show="open" @click.away="open = false" x-cloak x-transition class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div class="border-b border-gray-100 px-4 py-3"><p class="text-sm font-medium text-gray-900 truncate">{{ user.full_name }}</p><p class="text-xs text-gray-500 truncate">{{ user.email }}</p></div>
+              <div class="py-1"><a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cerrar Sesión</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <main class="py-10">
+    <header>
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold leading-tight tracking-tight text-gray-900">Cola de Caja</h1>
+        <p class="mt-2 text-sm text-gray-600">Tickets que requieren pago antes de pasar a atención.</p>
+      </div>
+    </header>
+    <div 
+        id="cashier-table-container"
+        class="mx-auto max-w-7xl sm:px-6 lg:px-8 mt-8" 
+        hx-get="/ui/cashier/table" 
+        hx-trigger="load, every 15s, refreshCashierList from:body"
+        hx-swap="innerHTML">
+        <p class="py-8 text-center text-gray-500">Cargando cola de caja...</p>
+    </div>
+  </main>
+
+  <!-- Notificación Toast Dinámica -->
+  <div x-show="showNotification" x-transition x-cloak class="fixed top-5 right-5 z-50">
+      <div class="rounded-md p-4 shadow-lg" :class="{ 'bg-green-50': notificationType === 'success', 'bg-red-50': notificationType === 'error' }">
+          <div class="flex">
+              <div class="flex-shrink-0">
+                  <svg x-show="notificationType === 'success'" class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                  <svg x-show="notificationType === 'error'" class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
+              </div>
+              <div class="ml-3"><p class="text-sm font-medium" :class="{ 'text-green-800': notificationType === 'success', 'text-red-800': notificationType === 'error' }" x-text="notificationText"></p></div>
+          </div>
+      </div>
+  </div>
+</div>
+{% endblock %}

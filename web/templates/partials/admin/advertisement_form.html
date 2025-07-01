@@ -1,0 +1,38 @@
+{#
+  Ruta: web/templates/partials/admin/advertisement_form.html
+  Propósito: Formulario para añadir/editar un anuncio.
+#}
+{% set is_edit = advertisement and advertisement.id %}
+<div class="bg-white">
+  <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+    <h3 class="text-lg font-semibold leading-6 text-gray-900">
+      {{ 'Editar Anuncio' if is_edit else 'Añadir Nuevo Anuncio' }}
+    </h3>
+    <p class="mt-1 text-sm text-gray-500">
+      Define un anuncio para el carrusel de publicidad del display.
+    </p>
+  </div>
+  
+  <form
+    hx-post="{{ '/admin/advertisements/' ~ advertisement.id if is_edit else '/admin/advertisements' }}"
+    class="px-4 py-6 sm:px-6 space-y-6"
+  >
+    <div>
+      <label for="description" class="block text-sm font-medium leading-6 text-gray-900">Descripción</label>
+      <div class="mt-2">
+        <input type="text" name="description" id="description" required value="{{ advertisement.description if is_edit else '' }}" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+      </div>
+      <p class="mt-2 text-xs text-gray-500">Ej: "Promoción 2x1 en refrescos", "Visita nuestra nueva web".</p>
+    </div>
+    
+    <!-- Botones de Acción -->
+    <div class="bg-gray-50 -mx-4 -mb-6 sm:-mx-6 px-4 py-3 text-right">
+      <button @click="isModalOpen = false" type="button" class="inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+        Cancelar
+      </button>
+      <button type="submit" class="ml-3 inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+        Guardar
+      </button>
+    </div>
+  </form>
+</div>
