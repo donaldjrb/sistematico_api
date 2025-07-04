@@ -1,0 +1,24 @@
+<!-- Ruta: web/templates/partials/cashier/_cashier_queue_list.html -->
+<div class="space-y-3">
+    {% for t in tickets %}
+    <div class="bg-white p-3 rounded-lg shadow-sm flex items-center justify-between transition-all duration-300 hover:shadow-md">
+        <div class="flex items-center">
+            <span class="bg-red-100 text-red-700 font-bold text-sm rounded-full h-8 w-8 flex items-center justify-center mr-3">
+                {{ loop.index + 1 }}
+            </span>
+            <div>
+                <p class="font-bold text-gray-800">{{ t.ticket_number }}</p>
+                <p class="text-xs text-gray-500">{{ t.service.name }}</p>
+            </div>
+        </div>
+        <div class="text-xs text-gray-400">
+            {{ t.created_at.strftime('%H:%M') }}
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-8 px-4 bg-white rounded-lg shadow-sm">
+        <i class="fas fa-check-circle text-green-400 text-3xl"></i>
+        <p class="mt-2 text-sm text-gray-500">No hay más tickets en la cola.</p>
+    </div>
+    {% endfor %}
+</div>

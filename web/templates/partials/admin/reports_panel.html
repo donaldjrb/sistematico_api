@@ -1,0 +1,90 @@
+<!-- Ruta: web/templates/partials/admin/reports_panel.html -->
+<div class="p-8 bg-slate-50 min-h-full">
+    <header class="mb-8">
+        <h2 class="text-3xl font-bold text-slate-800">Reportes y Estadísticas</h2>
+        <p class="text-slate-500 mt-1">Analice el rendimiento de su operación.</p>
+    </header>
+
+    <!-- KPIs del Día -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
+            <div class="bg-blue-100 p-4 rounded-full mr-4">
+                <i class="fas fa-ticket-alt text-blue-500 text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm text-slate-500">Tickets Atendidos (Hoy)</p>
+                <p class="text-3xl font-bold text-slate-800">{{ kpis.total_tickets_today }}</p>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-md flex items-center">
+            <div class="bg-green-100 p-4 rounded-full mr-4">
+                <i class="fas fa-clock text-green-500 text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm text-slate-500">Tiempo Prom. de Atención</p>
+                <p class="text-3xl font-bold text-slate-800">{{ kpis.avg_attention_time }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de Reportes con Filtro de Fecha -->
+    <div 
+        x-data="{ 
+            start_date: '{{ start_date }}', 
+            end_date: '{{ end_date }}' 
+        }"
+        class="bg-white p-6 rounded-xl shadow-md">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center border-b pb-4 mb-6">
+            <h3 class="font-bold text-lg text-slate-700">Análisis por Rango de Fechas</h3>
+            <form 
+                @submit.prevent="
+                    htmx.trigger('#tickets-over-time-chart-container', 'loadReport');
+                    htmx.trigger('#tickets-by-agent-chart-container', 'loadReport');
+                "
+                class="mt-4 md:mt-0 flex items-center space-x-4 text-sm">
+                
+                <div>
+                    <label for="start_date_input" class="font-medium text-slate-600">Desde:</label>
+                    <input type="date" x-model="start_date" id="start_date_input" class="ml-2 p-2 border rounded-md">
+                </div>
+                <div>
+                    <label for="end_date_input" class="font-medium text-slate-600">Hasta:</label>
+                    <input type="date" x-model="end_date" id="end_date_input" class="ml-2 p-2 border rounded-md">
+                </div>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">
+                    Generar
+                </button>
+            </form>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <!-- Gráfico de Barras -->
+            <div class="lg:col-span-3">
+                <h4 class="font-semibold text-slate-600 mb-2 text-center">Tickets Atendidos por Día</h4>
+                <div id="tickets-over-time-chart-container"
+                     hx-get="/admin/reports/tickets-over-time"
+                     hx-vals="js:{start_date: start_date, end_date: end_date}"
+                     hx-trigger="load, loadReport from:body"
+                     hx-swap="innerHTML">
+                    <div class="htmx-indicator text-center py-10">
+                        <p class="text-slate-500">Cargando reporte...</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Gráfico de Torta -->
+            <div class="lg:col-span-2">
+                <h4 class="font-semibold text-slate-600 mb-2 text-center">Distribución por Agente</h4>
+                 <div id="tickets-by-agent-chart-container"
+                     hx-get="/admin/reports/tickets-by-agent"
+                     hx-vals="js:{start_date: start_date, end_date: end_date}"
+                     hx-trigger="load, loadReport from:body"
+                     hx-swap="innerHTML">
+                    <div class="htmx-indicator text-center py-10">
+                        <p class="text-slate-500">Cargando reporte...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,57 @@
+<!-- Ruta: web/templates/partials/admin/_report_tickets_by_agent.html -->
+<div class="w-full h-80 relative">
+    {% if chart_data.data and chart_data.data|length > 0 %}
+    <canvas id="ticketsByAgentChart"></canvas>
+    {% else %}
+    <div class="flex items-center justify-center h-full">
+        <p class="text-slate-500">No hay datos para este período.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% if chart_data.data and chart_data.data|length > 0 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<script defer>
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const ctx = document.getElementById('ticketsByAgentChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ chart_data.labels | safe }},
+                    datasets: [{
+                        label: 'Tickets por Agente',
+                        data: {{ chart_data.data | safe }},
+                        backgroundColor: [
+                            'rgba(79, 70, 229, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 10,
+                            cornerRadius: 6
+                        }
+                    }
+                }
+            });
+        }
+    }, 100);
+});
+</script>
+{% endif %}

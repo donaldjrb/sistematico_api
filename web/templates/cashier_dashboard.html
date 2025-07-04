@@ -1,28 +1,34 @@
-<!-- ================================================================== -->
-<!-- ARCHIVO: web/templates/cashier_dashboard.html (CORREGIDO)          -->
-<!-- Propósito: Se ajusta el hx-get para apuntar a la ruta correcta     -->
-<!--            y funcional '/ui/cashier/table'.                        -->
-<!-- ================================================================== -->
+<!-- Ruta: web/templates/cashier_dashboard.html -->
 {% extends "layout.html" %}
 
-{% block title %}Caja - Sistemático{% endblock %}
+{% block title %}Centro de Mando de Caja - Sistemático{% endblock %}
 
 {% block content %}
 <div 
   x-data="{ 
     showNotification: false, 
     notificationText: '', 
-    notificationType: 'success' 
+    notificationType: 'success',
+    currentTime: new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', hour12: true })
   }"
-  class="min-h-screen bg-gray-100"
+  x-init="setInterval(() => { currentTime = new Date().toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', hour12: true }) }, 60000)"
+  class="min-h-screen bg-slate-50"
   @htmx:after-request.window="
     const triggerHeader = event.detail.xhr.getResponseHeader('HX-Trigger');
     if (triggerHeader) {
         try {
             const triggers = JSON.parse(triggerHeader);
-            if (triggers.refreshCashierList !== undefined) {
-                const cashierTable = document.querySelector('#cashier-table-container');
-                if (cashierTable) { htmx.trigger(cashierTable, 'refreshCashierList'); }
+            if (triggers.closeModal !== undefined) { 
+                const modal = document.querySelector('#edit-ticket-modal');
+                if(modal) { modal.remove(); }
+            }
+            if (triggers.refreshCashierPanel !== undefined) {
+                const cashierPanel = document.querySelector('#cashier-ticket-panel-container');
+                if (cashierPanel) { htmx.trigger(cashierPanel, 'refreshCashierPanel'); }
+            }
+            if (triggers.refreshQueueList !== undefined) {
+                const queueList = document.querySelector('#cashier-queue-list-container');
+                if (queueList) { htmx.trigger(queueList, 'refreshQueueList'); }
             }
             if (triggers.showNotification) {
                 notificationText = triggers.showNotification.text;
@@ -47,68 +53,124 @@
     }
   "
 >
-  <!-- Barra de Navegación del Agente -->
-  <nav class="bg-white shadow-sm border-b border-gray-200">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="flex h-16 justify-between">
-        <div class="flex">
-          <div class="flex flex-shrink-0 items-center">
-            <img class="block h-8 w-auto" src="{{ company.logo_url if company and company.logo_url else '/static/logos/default_logo.svg' }}" alt="{{ company.name or 'Sistemático' }}">
-          </div>
-          <div class="hidden sm:-my-px sm:ml-6 sm:flex sm:space-x-8">
-            <span class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium" aria-current="page">Caja</span>
-          </div>
-        </div>
-        <div class="hidden sm:ml-6 sm:flex sm:items-center">
-          <!-- Menú de Perfil -->
-          <div x-data="{ open: false }" class="relative ml-3">
-            <div>
-              <button @click="open = !open" type="button" class="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                <span class="sr-only">Abrir menú de usuario</span>
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gray-500">
-                  <span class="text-sm font-medium leading-none text-white">{{ user.full_name[0] | upper if user.full_name else 'U' }}</span>
+  <div class="flex h-screen">
+    <!-- Barra Lateral de Información -->
+    <aside class="w-64 bg-white p-6 border-r border-slate-200 flex flex-col justify-between">
+        <div>
+            <div class="flex items-center space-x-3 mb-8">
+                <img class="h-12 w-auto" src="{{ company.logo_url if company and company.logo_url else '/static/logos/default_logo.svg' }}" alt="{{ company.name or 'Sistemático' }}">
+                <h2 class="font-bold text-slate-800 text-lg">{{ company.name }}</h2>
+            </div>
+            <div class="text-center">
+                <span class="inline-flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 mb-2">
+                    <span class="text-3xl font-medium leading-none text-slate-600">{{ user.full_name[0] | upper if user.full_name else 'U' }}</span>
                 </span>
-              </button>
+                <h3 class="font-bold text-slate-900">{{ user.full_name }}</h3>
+                <p class="text-sm text-slate-500 capitalize">{{ user.role }}</p>
             </div>
-            <div x-show="open" @click.away="open = false" x-cloak x-transition class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-              <div class="border-b border-gray-100 px-4 py-3"><p class="text-sm font-medium text-gray-900 truncate">{{ user.full_name }}</p><p class="text-xs text-gray-500 truncate">{{ user.email }}</p></div>
-              <div class="py-1"><a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Cerrar Sesión</a></div>
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
-  </nav>
+        <div class="text-center">
+            <p class="text-3xl font-bold text-slate-800" x-text="currentTime"></p>
+            <p class="text-sm text-slate-500">{{ "now" | datetime('full') }}</p>
+            <a href="/logout" class="mt-4 inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200">
+                <i class="fas fa-sign-out-alt mr-2"></i>
+                Cerrar Sesión
+            </a>
+        </div>
+    </aside>
 
-  <!-- Contenido Principal -->
-  <main class="py-10">
-    <header>
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold leading-tight tracking-tight text-gray-900">Cola de Caja</h1>
-        <p class="mt-2 text-sm text-gray-600">Tickets que requieren pago antes de pasar a atención.</p>
-      </div>
-    </header>
-    <div 
-        id="cashier-table-container"
-        class="mx-auto max-w-7xl sm:px-6 lg:px-8 mt-8" 
-        hx-get="/ui/cashier/table" 
-        hx-trigger="load, every 15s, refreshCashierList from:body"
-        hx-swap="innerHTML">
-        <p class="py-8 text-center text-gray-500">Cargando cola de caja...</p>
-    </div>
-  </main>
+    <!-- Contenido Principal -->
+    <div class="flex-1 flex overflow-hidden">
+        <main class="flex-1 p-8 overflow-y-auto">
+            <header>
+                <h1 class="text-4xl font-bold tracking-tight text-slate-900">Centro de Mando de Caja</h1>
+                <p class="mt-1 text-lg text-slate-600">Atienda al próximo cliente en la cola de pago.</p>
+            </header>
+            
+            <div 
+                id="cashier-ticket-panel-container"
+                class="mt-8" 
+                hx-get="/cashier/next-ticket" 
+                hx-trigger="load, refreshCashierPanel from:body"
+                hx-swap="innerHTML">
+                <div class="py-8 text-center text-slate-500">
+                    <i class="fas fa-spinner fa-spin text-3xl text-indigo-500"></i>
+                    <p class="mt-2">Buscando próximo ticket...</p>
+                </div>
+            </div>
+        </main>
 
-  <!-- Notificación Toast Dinámica -->
+        <!-- Columna de Cola en Tiempo Real -->
+        <aside class="w-80 bg-slate-100 p-6 border-l border-slate-200 overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-slate-800">Cola de Caja</h3>
+                <span id="cashier-queue-count-badge" class="bg-red-100 text-red-600 text-xs font-semibold px-2.5 py-0.5 rounded-full"></span>
+            </div>
+            <div 
+                id="cashier-queue-list-container"
+                hx-get="/cashier/queue-list"
+                hx-trigger="load, refreshQueueList from:body, every 30s"
+                hx-swap="innerHTML">
+                <div class="text-center py-8 px-4">
+                    <i class="fas fa-spinner fa-spin text-xl text-slate-400"></i>
+                </div>
+            </div>
+        </aside>
+    </div>
+  </div>
+
+  <div id="modal-container"></div>
+
   <div x-show="showNotification" x-transition x-cloak class="fixed top-5 right-5 z-50">
-      <div class="rounded-md p-4 shadow-lg" :class="{ 'bg-green-50': notificationType === 'success', 'bg-red-50': notificationType === 'error' }">
-          <div class="flex">
-              <div class="flex-shrink-0">
-                  <svg x-show="notificationType === 'success'" class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                  <svg x-show="notificationType === 'error'" class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
-              </div>
-              <div class="ml-3"><p class="text-sm font-medium" :class="{ 'text-green-800': notificationType === 'success', 'text-red-800': notificationType === 'error' }" x-text="notificationText"></p></div>
-          </div>
-      </div>
+    <div class="rounded-md p-4 shadow-lg" :class="{ 'bg-green-50': notificationType === 'success', 'bg-red-50': notificationType === 'error' }">
+      <div class="flex"><div class="flex-shrink-0"><svg x-show="notificationType === 'success'" class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg><svg x-show="notificationType === 'error'" class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg></div><div class="ml-3"><p class="text-sm font-medium" :class="{ 'text-green-800': notificationType === 'success', 'text-red-800': notificationType === 'error' }" x-text="notificationText"></p></div></div>
+    </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const queueCountBadge = document.getElementById('cashier-queue-count-badge');
+    const queueListContainer = document.getElementById('cashier-queue-list-container');
+
+    const connectWebSocket = () => {
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/{{ user.company_id }}`);
+
+        ws.onmessage = (event) => {
+            try {
+                const message = JSON.parse(event.data);
+                if (message.event === 'queue_update') {
+                    // Refrescar la lista de la cola
+                    if (queueListContainer) {
+                        htmx.trigger(queueListContainer, 'refreshQueueList');
+                    }
+                    // Actualizar el contador
+                    if (queueCountBadge && message.data.cashier_queue) {
+                        const count = message.data.cashier_queue.length;
+                        if (count > 0) {
+                            queueCountBadge.textContent = count;
+                            queueCountBadge.classList.remove('hidden');
+                        } else {
+                            queueCountBadge.classList.add('hidden');
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Error processing WebSocket message:", e);
+            }
+        };
+
+        ws.onclose = () => setTimeout(connectWebSocket, 5000);
+        ws.onerror = (error) => {
+            console.error("WebSocket Error:", error);
+            ws.close();
+        };
+    };
+
+    connectWebSocket();
+});
+</script>
 {% endblock %}

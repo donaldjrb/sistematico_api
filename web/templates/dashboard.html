@@ -1,3 +1,4 @@
+<!-- Ruta: web/templates/dashboard.html -->
 {% extends "layout.html" %}
 
 {% block title %}Dashboard - Sistemático{% endblock %}
@@ -33,12 +34,10 @@
                 const reasonTable = document.querySelector('#reasons-table-container');
                 if (reasonTable) { htmx.trigger(reasonTable, 'refreshReasonList'); }
             }
-            // --- INICIO DE MODIFICACIÓN ---
             if (triggers.refreshMediaGallery !== undefined) {
                 const mediaGallery = document.querySelector('#media-gallery-container');
                 if (mediaGallery) { htmx.trigger(mediaGallery, 'refreshMediaGallery'); }
             }
-            // --- FIN DE MODIFICACIÓN ---
             if (triggers.refreshHomePanel !== undefined) {
                 const homePanel = document.querySelector('#home-panel-container');
                 if(homePanel) { htmx.trigger(homePanel, 'refreshHomePanel'); }
@@ -90,7 +89,6 @@
               </div>
             </div>
           </div>
-          <!-- Menú Móvil -->
         </div>
       </div>
     </nav>
@@ -112,8 +110,9 @@
                 <a href="#" @click.prevent="activeTab = 'services'" :class="activeTab === 'services' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Servicios</a>
                 <a href="#" @click.prevent="activeTab = 'reasons'" :class="activeTab === 'reasons' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Razones de Cierre</a>
                 <a href="#" @click.prevent="activeTab = 'ads'" :class="activeTab === 'ads' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Publicidad Texto</a>
-                <!-- --- INICIO DE MODIFICACIÓN --- -->
                 <a href="#" @click.prevent="activeTab = 'media'" :class="activeTab === 'media' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Gestión Multimedia</a>
+                <!-- --- INICIO DE MODIFICACIÓN --- -->
+                <a href="#" @click.prevent="activeTab = 'reports'" :class="activeTab === 'reports' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Reportes</a>
                 <!-- --- FIN DE MODIFICACIÓN --- -->
             </nav>
         </div>
@@ -133,9 +132,12 @@
           <div x-show="activeTab === 'ads'" hx-get="/admin/advertisements" hx-trigger="load" hx-swap="innerHTML">
             <p class="py-8 text-center text-gray-500">Cargando publicidad...</p>
           </div>
-          <!-- --- INICIO DE MODIFICACIÓN --- -->
           <div x-show="activeTab === 'media'" hx-get="/admin/media-files" hx-trigger="load" hx-swap="innerHTML">
             <p class="py-8 text-center text-gray-500">Cargando gestión multimedia...</p>
+          </div>
+          <!-- --- INICIO DE MODIFICACIÓN --- -->
+          <div x-show="activeTab === 'reports'" hx-get="/admin/reports" hx-trigger="load" hx-swap="innerHTML">
+            <p class="py-8 text-center text-gray-500">Cargando reportes...</p>
           </div>
           <!-- --- FIN DE MODIFICACIÓN --- -->
         </div>
@@ -153,7 +155,6 @@
           x-transition
           @click.away="isModalOpen = false" 
           class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-          <!-- HTMX cargará el contenido (formularios/diálogos) aquí -->
           <div id="modal-content"></div>
         </div>
       </div>
@@ -177,4 +178,3 @@
   </div>
 </div>
 {% endblock %}
-

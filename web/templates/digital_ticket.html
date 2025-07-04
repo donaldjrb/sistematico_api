@@ -1,0 +1,194 @@
+<!-- Ruta: web/templates/digital_ticket.html -->
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Su Ticket: {{ ticket.ticket_number }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .highlight { animation: highlight-animation 1.5s ease-out; }
+        @keyframes highlight-animation {
+            0% { background-color: transparent; }
+            50% { background-color: #e0e7ff; } /* indigo-100 */
+            100% { background-color: transparent; }
+        }
+        .call-highlight { animation: call-animation 1.5s ease-out; }
+        @keyframes call-animation {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } /* green-500 */
+            50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+    </style>
+</head>
+<body class="h-full">
+    <audio id="chime-sound" preload="auto">
+        <source src="/static/sounds/ring.mp3" type="audio/mpeg">
+    </audio>
+
+    <main class="flex flex-col items-center justify-center min-h-full p-4">
+        <div id="ticket-container" class="w-full max-w-sm mx-auto transition-transform duration-300">
+            
+            <header class="text-center mb-6">
+                {% if company.logo_url %}
+                <img class="mx-auto h-20 w-auto rounded-full shadow-md" src="{{ company.logo_url }}" alt="Logo de {{ company.name }}">
+                {% endif %}
+                <h1 class="mt-4 text-2xl font-bold text-slate-800">{{ company.name }}</h1>
+            </header>
+
+            <div class="bg-white rounded-2xl shadow-xl p-6 text-center">
+                <p class="text-lg font-semibold text-indigo-600">Su Número de Atención</p>
+                <p id="ticket-number-display" class="text-6xl font-black text-indigo-600 tracking-tighter my-2">{{ ticket.ticket_number }}</p>
+                
+                <div class="mt-4 border-t pt-4 space-y-2">
+                    <div class="flex justify-between items-center text-left">
+                        <span class="text-slate-500">Servicio:</span>
+                        <span id="service-name" class="font-bold text-slate-800 truncate">{{ ticket.service.name }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-left">
+                        <span class="text-slate-500">Estado:</span>
+                        <span id="ticket-status" class="font-bold text-slate-800 capitalize px-2 py-1 rounded-md transition-all">{{ ticket.status.replace('_', ' ') }}</span>
+                    </div>
+                    <div id="people-ahead-container" class="flex justify-between items-center text-left {% if ticket.status not in ['pendiente_pago', 'pagado', 'derivado'] %}hidden{% endif %}">
+                        <span id="queue-name-label" class="text-slate-500">Personas por delante:</span>
+                        <span id="people-ahead-count" class="font-bold text-slate-800">{{ people_ahead }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-left">
+                        <span class="text-slate-500">Emitido:</span>
+                        <span class="font-bold text-slate-800">{{ ticket.created_at.strftime('%I:%M %p') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="mt-8 text-center text-sm text-slate-400">
+                &copy; {{ ticket.created_at.strftime('%Y') }} {{ company.name }}.
+            </footer>
+        </div>
+    </main>
+
+    <div id="audio-unlock-banner" class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4 text-center cursor-pointer transition-transform duration-300 translate-y-0">
+        <p>Toque aquí para activar las notificaciones de sonido.</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const TICKET_ID = {{ ticket.id }};
+            const TICKET_UUID = "{{ ticket.uuid }}";
+            let currentStatus = "{{ ticket.status }}";
+
+            const ticketNumberElement = document.getElementById('ticket-number-display');
+            const statusElement = document.getElementById('ticket-status');
+            const serviceNameElement = document.getElementById('service-name');
+            const peopleAheadContainer = document.getElementById('people-ahead-container');
+            const peopleAheadElement = document.getElementById('people-ahead-count');
+            const queueNameLabel = document.getElementById('queue-name-label');
+            const chimeSound = document.getElementById('chime-sound');
+            const ticketContainer = document.getElementById('ticket-container');
+            const audioUnlockBanner = document.getElementById('audio-unlock-banner');
+
+            if (audioUnlockBanner) {
+                audioUnlockBanner.addEventListener('click', () => {
+                    if (chimeSound) {
+                        chimeSound.play().then(() => {
+                            chimeSound.pause();
+                            chimeSound.currentTime = 0;
+                        }).catch(e => console.error("Error al desbloquear audio:", e));
+                    }
+                    audioUnlockBanner.style.transform = 'translateY(100%)';
+                }, { once: true });
+            }
+
+            const connectWebSocket = () => {
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const ws = new WebSocket(`${wsProtocol}//${window.location.host}/ws/{{ ticket.company_id }}`);
+
+                ws.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        
+                        if (message.event === 'status_update' && message.data.uuid === TICKET_UUID) {
+                            currentStatus = message.data.status;
+                            statusElement.textContent = currentStatus.replace(/_/g, ' ');
+                            serviceNameElement.textContent = message.data.service_name;
+                            // --- INICIO DE CORRECCIÓN ---
+                            ticketNumberElement.textContent = message.data.ticket_number;
+                            // --- FIN DE CORRECCIÓN ---
+
+                            statusElement.classList.add('highlight');
+                            setTimeout(() => statusElement.classList.remove('highlight'), 1500);
+                            
+                            if (['pendiente_pago', 'pagado', 'derivado'].includes(currentStatus)) {
+                                if(peopleAheadContainer) peopleAheadContainer.classList.remove('hidden');
+                            } else {
+                                if(peopleAheadContainer) peopleAheadContainer.classList.add('hidden');
+                            }
+                            
+                            if (currentStatus === 'atendiendo') {
+                                if (chimeSound) chimeSound.play().catch(e => console.error(e));
+                                if (ticketContainer) {
+                                    ticketContainer.classList.add('call-highlight');
+                                    setTimeout(() => ticketContainer.classList.remove('call-highlight'), 1500);
+                                }
+                            }
+                        }
+
+                        if (message.event === 'new_call' && message.data.uuid === TICKET_UUID) {
+                            if (chimeSound) chimeSound.play().catch(e => console.error(e));
+                            if (ticketContainer) {
+                                ticketContainer.classList.add('call-highlight');
+                                setTimeout(() => ticketContainer.classList.remove('call-highlight'), 1500);
+                            }
+                            if(peopleAheadContainer) peopleAheadContainer.classList.add('hidden');
+                        }
+
+                        if (message.event === 'queue_update') {
+                            let foundInQueue = false;
+                            
+                            if (message.data.cashier_queue) {
+                                const cashierQueueIds = message.data.cashier_queue.map(t => t.id);
+                                const myIndex = cashierQueueIds.indexOf(TICKET_ID);
+                                if (myIndex !== -1) {
+                                    peopleAheadElement.textContent = myIndex;
+                                    queueNameLabel.textContent = "Personas en Caja:";
+                                    peopleAheadContainer.classList.remove('hidden');
+                                    foundInQueue = true;
+                                }
+                            }
+                            
+                            if (!foundInQueue && message.data.agent_queue) {
+                                const agentQueueIds = message.data.agent_queue.map(t => t.id);
+                                const myIndex = agentQueueIds.indexOf(TICKET_ID);
+                                if (myIndex !== -1) {
+                                    peopleAheadElement.textContent = myIndex;
+                                    queueNameLabel.textContent = "Personas en Espera:";
+                                    peopleAheadContainer.classList.remove('hidden');
+                                    foundInQueue = true;
+                                }
+                            }
+
+                            if (!foundInQueue) {
+                                peopleAheadContainer.classList.add('hidden');
+                            }
+                        }
+
+                    } catch (e) {
+                        console.error("Error al procesar mensaje de WebSocket:", e);
+                    }
+                };
+
+                ws.onclose = () => setTimeout(connectWebSocket, 5000);
+                ws.onerror = (error) => {
+                    console.error("Error de WebSocket:", error);
+                    ws.close();
+                };
+            };
+
+            connectWebSocket();
+        });
+    </script>
+</body>
+</html>

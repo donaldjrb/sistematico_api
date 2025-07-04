@@ -1,50 +1,69 @@
 <!-- ================================================================== -->
 <!-- ARCHIVO 2: web/templates/partials/kiosk/_kiosk_ticket_result.html  -->
-<!-- Propósito: Fragmento que muestra el ticket generado.               -->
+<!-- (VERSIÓN FINAL)                                                    -->
 <!-- ================================================================== -->
-<div 
-  x-data="{ countdown: 15 }" 
+<div
+  id="kiosk-content-area" 
+  class="w-full max-w-md mx-auto"
+  x-data="{ countdown: 30 }"
   x-init="
     const timer = setInterval(() => {
       countdown--;
-      if (countdown === 0) {
+      if (countdown <= 0) {
         clearInterval(timer);
-        htmx.trigger('#service-selection-wrapper', 'returnToServices');
+        htmx.trigger('#close-kiosk-btn', 'click');
       }
     }, 1000);
   "
-  id="service-selection-wrapper"
-  hx-get="/kiosk/{{ company.id }}/services"
-  hx-trigger="returnToServices"
-  hx-target="#kiosk-content"
-  hx-swap="innerHTML"
-  class="bg-white p-8 rounded-lg shadow-lg animate-fade-in"
 >
-  <h2 class="text-2xl font-bold text-slate-800">¡Tu ticket ha sido generado!</h2>
-  
-  <p class="mt-4 text-6xl font-mono font-bold text-indigo-600 tracking-wider">
-    {{ ticket.ticket_number }}
-  </p>
-  
-  <div class="mt-6 text-xl text-slate-600">
-    <p>Servicio: <strong class="font-semibold">{{ ticket.service.name }}</strong></p>
-  </div>
-  
-  <div class="mt-6 p-4 rounded-lg" 
-       :class="{
-         'bg-blue-100 text-blue-800': '{{ ticket.status }}' !== 'pendiente_pago',
-         'bg-amber-100 text-amber-800': '{{ ticket.status }}' === 'pendiente_pago'
-       }">
-    <p class="text-2xl font-semibold">
-      {% if ticket.status == 'pendiente_pago' %}
-        Por favor, dirígete a <strong class="uppercase">Caja</strong> para realizar tu pago.
-      {% else %}
-        Por favor, espera en la sala a ser llamado.
-      {% endif %}
-    </p>
-  </div>
+  <div class="bg-white rounded-2xl shadow-2xl p-8 text-center">
+    
+    <header>
+      <h2 class="text-2xl font-bold text-gray-800">¡Su ticket ha sido generado!</h2>
+      <p class="text-md text-gray-500 mt-1">Por favor, guarde su número de atención.</p>
+    </header>
 
-  <p class="mt-8 text-sm text-slate-400">
-    Regresando a la pantalla principal en <span x-text="countdown" class="font-semibold"></span> segundos...
-  </p>
+    <div id="ticket-to-print" class="my-8">
+      <p class="text-lg font-semibold text-indigo-600">Su Turno</p>
+      <p class="text-8xl font-black text-gray-900 tracking-tight my-2">{{ ticket.ticket_number }}</p>
+      <p class="text-xl text-gray-600 truncate">{{ ticket.service.name }}</p>
+      <p class="text-md text-gray-500">Emitido: {{ ticket.created_at.strftime('%I:%M %p') }}</p>
+      <div class="mt-6 flex justify-center">
+        <img class="rounded-lg" src="{{ qr_code_data_url }}" alt="Código QR del Ticket">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <button 
+        type="button"
+        @click="window.print()"
+        class="w-full inline-flex items-center justify-center gap-x-2 rounded-lg bg-gray-700 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h8a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" /></svg>
+        Imprimir
+      </button>
+
+      <button
+        id="close-kiosk-btn"
+        type="button"
+        class="w-full inline-flex items-center justify-center gap-x-2 rounded-lg bg-indigo-600 px-4 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        hx-get="/kiosk/{{ company.id }}/services"
+        hx-target="#kiosk-wrapper"
+        hx-swap="innerHTML"
+      >
+        Cerrar
+        <span class="text-sm" x-text="`(${countdown})`"></span>
+      </button>
+    </div>
+  </div>
 </div>
+
+<style>
+  @media print {
+    body > *, #kiosk-wrapper > div > *:not(#ticket-to-print) { display: none !important; }
+    #ticket-to-print { display: block !important; width: 100%; text-align: center; margin: 0; padding: 0; }
+    #ticket-to-print p { font-size: 14pt !important; color: #000 !important; }
+    #ticket-to-print .text-8xl { font-size: 60pt !important; }
+    #ticket-to-print img { max-width: 50mm; }
+  }
+</style>

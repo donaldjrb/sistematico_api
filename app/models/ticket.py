@@ -1,13 +1,23 @@
 # app/models/ticket.py
+import uuid
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.mysql import CHAR
+
 from app.db.session import Base
 
 class Ticket(Base):
     __tablename__ = "tickets"
 
     id = Column(Integer, primary_key=True, index=True)
+    
+    # --- INICIO DE MODIFICACIÓN ---
+    # Se añade un campo UUID para la identificación pública y segura del ticket.
+    # Se utiliza CHAR(36) para almacenar el UUID como una cadena.
+    uuid = Column(CHAR(36), unique=True, index=True, nullable=False, default=lambda: str(uuid.uuid4()))
+    # --- FIN DE MODIFICACIÓN ---
+    
     ticket_number = Column(String(20), nullable=False)
     priority_level = Column(Integer, default=0)
     status = Column(String(50), default="esperando") 
@@ -19,15 +29,10 @@ class Ticket(Base):
     service_id = Column(Integer, ForeignKey("services.id"), nullable=False)
     close_reason_id = Column(Integer, ForeignKey("close_reasons.id"), nullable=True)
     
-    # --- INICIO DE MODIFICACIÓN ---
-    # El campo call_count ya existía, lo cual es perfecto. Lo mantenemos.
     call_count = Column(Integer, default=0, nullable=False)
-
-    # Se añade el campo para saber quién atendió el ticket
     attended_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    # --- FIN DE MODIFICACIÓN ---
 
-    # Mantenemos tus campos existentes
+    # Mantenemos sus campos existentes
     original_service_id = Column(Integer, ForeignKey("services.id"), nullable=True)
     derivation_count = Column(Integer, default=0, nullable=False)
     processed_by_cashier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
@@ -37,11 +42,9 @@ class Ticket(Base):
     service = relationship("Service", foreign_keys=[service_id])
     close_reason = relationship("CloseReason")
 
-    # --- INICIO DE MODIFICACIÓN ---
-    # Relación para acceder a los datos del usuario que atendió
     attended_by = relationship("User", back_populates="attended_tickets", foreign_keys=[attended_by_id])
-    # --- FIN DE MODIFICACIÓN ---
 
-    # Mantenemos tus relaciones existentes
     original_service = relationship("Service", foreign_keys=[original_service_id])
     cashier = relationship("User", back_populates="processed_tickets_as_cashier", foreign_keys=[processed_by_cashier_id])
+
+

@@ -1,50 +1,25 @@
 <!-- ================================================================== -->
-<!-- ARCHIVO 1: web/templates/kiosk.html (CORREGIDO Y REFORZADO)        -->
-<!-- Propósito: Se cambia hx-vals por un form para mayor robustez.      -->
+<!-- ARCHIVO 1: web/templates/kiosk.html (VERSIÓN PROFESIONAL)          -->
 <!-- ================================================================== -->
 {% extends "layout.html" %}
 
 {% block title %}Bienvenido a {{ company.name }}{% endblock %}
 
 {% block content %}
-<div class="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 sm:p-6">
-  <div class="w-full max-w-2xl text-center">
-    
-    <header class="mb-8">
-      <img class="mx-auto h-20 w-auto" src="{{ company.logo_url if company and company.logo_url else '/static/logos/default_logo.svg' }}" alt="Logo de {{ company.name }}">
-      <h1 class="mt-4 text-4xl font-bold tracking-tight text-slate-800">Bienvenido a {{ company.name }}</h1>
-      <p class="mt-2 text-lg text-slate-600">Por favor, selecciona el servicio que deseas.</p>
-    </header>
-
-    <div id="kiosk-content">
-      <div id="service-selection">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {% for service in services %}
-            <!-- --- INICIO DE CORRECCIÓN --- -->
-            <!-- Se usa un <form> por cada botón para un envío de datos más estándar y robusto -->
-            <form
-              hx-post="/kiosk/{{ company.id }}/generate-ticket"
-              hx-target="#kiosk-content"
-              hx-swap="innerHTML"
-            >
-              <input type="hidden" name="service_id" value="{{ service.id }}">
-              <button 
-                type="submit"
-                class="w-full h-full flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow-md hover:shadow-xl hover:bg-indigo-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <span class="text-xl font-semibold text-indigo-700">{{ service.name }}</span>
-                <span class="text-sm text-slate-500 mt-1">{{ service.location }}</span>
-              </button>
-            </form>
-            <!-- --- FIN DE CORRECCIÓN --- -->
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-
-    <footer class="mt-12 text-sm text-slate-400">
-      &copy; {{ now().year }} {{ company.name }}. Todos los derechos reservados.
-    </footer>
+<div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-100 to-blue-50 p-4 sm:p-6 lg:p-8">
+  <!--
+    CORRECCIÓN: Este div ahora es el contenedor principal y persistente.
+    HTMX cargará el contenido dentro de él, sin reemplazarlo.
+  -->
+  <div 
+    id="kiosk-wrapper" 
+    class="w-full max-w-5xl mx-auto htmx-settling:opacity-50"
+    hx-get="/kiosk/{{ company.id }}/services"
+    hx-trigger="load"
+    hx-swap="innerHTML"
+  >
+    <!-- Indicador de carga inicial -->
+    <p class="text-center text-slate-500">Cargando servicios...</p>
   </div>
 </div>
 {% endblock %}

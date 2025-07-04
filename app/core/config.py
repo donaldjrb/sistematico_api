@@ -1,6 +1,7 @@
+# Ruta: app/core/config.py
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +21,14 @@ class Settings(BaseSettings):
     # ── CORS ──────────────────────────────────────────────────────
     # URL del frontend autorizado; por defecto el típico Vite/React local
     frontend_url: AnyHttpUrl = "http://localhost:5173"
+
+    # --- INICIO DE MODIFICACIÓN ---
+    # ── URL Pública de la Aplicación ──────────────────────────────
+    # Esta es la URL base que será accesible desde otros dispositivos en la red.
+    # Debe configurarse en el archivo .env.
+    # Ejemplo: APP_PUBLIC_URL=http://10.1.2.15:8080
+    APP_PUBLIC_URL: str = Field(default="http://localhost:8080", alias="APP_PUBLIC_URL")
+    # --- FIN DE MODIFICACIÓN ---
 
     # ── Configuración de pydantic-settings ────────────────────────
     model_config = SettingsConfigDict(

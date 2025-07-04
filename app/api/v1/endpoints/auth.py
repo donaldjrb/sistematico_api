@@ -14,21 +14,18 @@ router = APIRouter()
 settings = get_settings()
 _refresh_store = {}
 
-# --- INICIO DE CORRECCIÓN QUIRÚRGICA ---
-# 1. Se añade 'service_id' al esquema de respuesta del usuario.
 class UserLoginResponse(BaseModel):
     id: int
     email: str
     company_id: int
     role: str
     full_name: str | None = None
-    service_id: int | None = None # CAMBIO AÑADIDO
+    service_id: int | None = None 
 
 class TokenLoginResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserLoginResponse
-# --- FIN DE CORRECCIÓN QUIRÚRGICA ---
 
 @router.post("/register", response_model=dict, tags=["auth"])
 def register(data: UserCreate, db: Session = Depends(get_db)):
@@ -68,10 +65,7 @@ def login(
             "company_id": user.company_id,
             "role": user.role,
             "full_name": user.full_name,
-            # --- INICIO DE CORRECCIÓN QUIRÚRGICA ---
-            # 2. Se añade el 'service_id' del usuario a la respuesta.
             "service_id": user.service_id 
-            # --- FIN DE CORRECCIÓN QUIRÚRGICA ---
         },
     }
 
